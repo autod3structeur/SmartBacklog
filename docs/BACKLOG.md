@@ -1,40 +1,43 @@
-# Product Backlog: SmartBacklog
+# Product Backlog & Project Structure: SmartBacklog
 
-This document represents the exhaustive list of functionalities to be developed, prioritized using the **MoSCoW method** (Must have, Should have, Could have, Won't have).
-
-## Epics Breakdown
-1.  **Epic 1: Core Workspace (Kanban)** - Essential infrastructure to view and manage task columns.
-2.  **Epic 2: Ticket Management (CRUD)** - The ability to create, read, update, and delete tasks.
-3.  **Epic 3: AI Intelligence (Dev "Plus")** - Integration of LLM capabilities to assist the Product Owner.
+Following the methodology from "Example Jira.pdf" and "Final Project.pdf".
 
 ---
 
-## User Stories (US)
+## Step 1: Creation of the Structure (Epics)
+As per the project requirements, we isolate 3 themes:
+1.  **Epic 1: Workspace Infrastructure:** Development of the Kanban board (To Do, In Progress, Done).
+2.  **Epic 2: Ticket Management (CRUD):** Creating, Editing, and Deleting User Stories.
+3.  **Epic 4: AI Intelligence (Expert Assistant):** Automation of criteria, estimation, and priority.
 
-### EPIC 1 & 2: MVP (Minimum Viable Product) - Target: Sprint 1
+## Step 2: Writing User Stories (US)
 
-| ID | User Story (As a... I want... so that...) | Acceptance Criteria | Priority | Story Points |
-| :--- | :--- | :--- | :--- | :--- |
-| **US1** | **As a** Product Owner, **I want** to see a Kanban board with 3 distinct columns (To Do, In Progress, Done) **so that** I can track task progress visually. | - The board displays 3 columns side-by-side.<br>- The columns are clearly labeled.<br>- The board is responsive. | **Must** | 3 |
-| **US2** | **As a** Product Owner, **I want** to create a new ticket in the "To Do" column **so that** I can add tasks to the backlog. | - A "Create Ticket" button is available.<br>- A modal/form opens asking for a Title and Description.<br>- The new ticket appears at the bottom of "To Do". | **Must** | 5 |
-| **US3** | **As a** developer, **I want** to drag and drop a ticket between columns **so that** I can update its status easily. | - Tickets can be clicked and dragged.<br>- Dropping a ticket in a new column updates its status visually. | **Must** | 8 |
-| **US4** | **As a** Product Owner, **I want** to delete a ticket **so that** I can remove cancelled or duplicate tasks. | - A delete icon is visible on each ticket.<br>- Clicking it asks for confirmation before removal. | **Must** | 2 |
+| ID | User Story (As a... I want... so that...) | Acceptance Criteria |
+| :--- | :--- | :--- |
+| **US1** | **As a** Product Owner, **I want** to see a Kanban board with 3 columns (To Do, In Progress, Done). | - 3 labeled columns visible.<br>- Responsive layout. |
+| **US2** | **As a** Product Owner, **I want** to add, edit, and delete tickets. | - CRUD operations functional.<br>- Tickets display Title/Description. |
+| **US3** | **As a** PO, **I want** the AI to auto-generate acceptance criteria from a title. | - AI returns a list of criteria.<br>- User can review before saving. |
+| **US4** | **As a** PO, **I want** the AI to suggest a Fibonacci complexity (1, 2, 3, 5, 8, 13). | - AI analyzes description.<br>- Suggests a valid Fibonacci number. |
+| **US5** | **As a** PO, **I want** the AI to tag tickets as "Blocking" or "Urgent". | - AI detects critical keywords.<br>- Visual badge applied to ticket. |
 
-### EPIC 3: AI Integration - Target: Sprint 2
+## Step 3: Prioritization (The MoSCoW Method)
+"Can the project function without this task?"
 
-| ID | User Story (As a... I want... so that...) | Acceptance Criteria | Priority | Story Points |
-| :--- | :--- | :--- | :--- | :--- |
-| **US5** | **As a** Product Owner, **I want** the AI to auto-generate acceptance criteria when I type a ticket title **so that** I save time writing specifications. | - A button "Generate Criteria" is in the ticket creation form.<br>- It calls the AI API with the title.<br>- The response populates the description field in markdown format. | **Should** | 5 |
-| **US6** | **As a** Product Owner, **I want** the AI to estimate the complexity (Story Points) based on the description **so that** sprint planning is easier. | - A button "Estimate Complexity" analyzes the description.<br>- It returns a Fibonacci number (1, 2, 3, 5, 8, 13).<br>- The suggested value is displayed on the ticket. | **Should** | 5 |
-| **US7** | **As a** Product Owner, **I want** the AI to analyze the ticket and flag it as "Blocking" or "Urgent" **so that** critical tasks are highlighted. | - The AI analyzes the text upon ticket creation.<br>- If words like "crash", "error", "prod" are detected or implied, a red "Urgent" badge is added. | **Could** | 3 |
+*   **Must have (Essential):** US1 (Board Layout), US2 (Ticket CRUD). This is the "App Core" (MVP).
+*   **Should have (Important):** US3 (AI Criteria), US4 (AI Complexity). This is the "Dev Plus" core.
+*   **Could have (Bonus):** US5 (AI Priority Analysis).
 
----
+## Step 4: Sprint Planning
+*   **Number of Sprints:** 2 Sprints.
+*   **Sprint Duration:** 2 weeks (as per Professor's example).
 
-## Technical Tasks (TT)
-*These are tasks not directly tied to a user feature but necessary for the project.*
+| Sprint | Objective | US Included |
+| :--- | :--- | :--- |
+| **Sprint 1** | **The App Core (MVP):** Functional board and ticket management. | US1, US2 |
+| **Sprint 2** | **AI Integration:** Implementing Prompt Engineering and Smart features. | US3, US4, US5 |
 
-*   **TT1:** Initialize Git repository and project structure. (Done)
-*   **TT2:** Set up the Frontend environment (React/Vite, Tailwind).
-*   **TT3:** Set up the Backend environment (Node.js/Express, basic local storage).
-*   **TT4:** Configure the OpenAI/Mistral API connection on the backend.
-*   **TT5:** Design the "System Prompt" (Prompt Engineering) for the AI Agile Coach persona.
+## Step 5: Implementation Roadmap
+1. Create the project structure.
+2. Develop the Frontend/Backend logic for tickets.
+3. Design the "Expert Agile Coach" system prompt.
+4. Integrate the LLM API calls.
