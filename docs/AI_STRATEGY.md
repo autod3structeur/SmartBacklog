@@ -19,4 +19,4 @@ To ensure the AI provides professional and coherent assistance, the backend will
 ## 2. Technical Integration (Sprint 2)
 *   **API:** OpenAI GPT-4o or Mistral AI (via Hugging Face).
 *   **Implementation:** The prompt will be stored in an environment variable or a configuration file to separate logic from instructions.
-*   **Validation:** The AI output will be parsed by the backend before being sent to the React frontend.
+*   **Validation:** The AI output will be parsed by the backend before being sent to the flask via python frontend.
