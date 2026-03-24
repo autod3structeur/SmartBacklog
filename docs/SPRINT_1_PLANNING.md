@@ -28,6 +28,6 @@ For a User Story to be considered "Done" in this Sprint, it must meet the follow
 *   [ ] `Frontend:` Create the basic UI layout (Header, Board area).
 *   [ ] `Frontend:` Create Column components.
 *   [ ] `Frontend:` Create Ticket components.
-*   [ ] `Backend:` Setup Express server and basic REST API routes (`GET /tickets`, `POST /tickets`, `DELETE /tickets`).
+*   [ ] `Backend:` Setup Flask server and basic REST API routes (`GET /tickets`, `POST /tickets`, `DELETE /tickets`).
 *   [ ] `Integration:` Link Frontend UI to Backend API.
 *   [ ] `Frontend:` Implement a Drag-and-Drop library (e.g., `dnd-kit` or `react-beautiful-dnd`).
