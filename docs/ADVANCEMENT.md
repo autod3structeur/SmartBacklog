@@ -24,7 +24,7 @@ Following the principles taught in the IS Modeling course, this project strictly
 - [x] Define Epics and User Stories.
 - [x] Prioritize the Backlog (MoSCoW).
 - [x] Set up the Git repository and documentation structure.
-- [ ] Prepare UI mockups/wireframes (optional but recommended).
+- [ ] Prepare UI mockups/wireframes (optional).
 
 ### Phase 2: Sprint 1 - Core App MVP
 *Duration: 1-2 weeks*
