@@ -30,7 +30,7 @@ Following the principles taught in the IS Modeling course, this project strictly
 *Duration: 1-2 weeks*
 *Goal: Provide a functional, standard Kanban board without AI.*
 - [ ] Develop the React Frontend interface.
-- [ ] Develop the Node.js backend (CRUD operations).
+- [ ] Develop the Python backend.
 - [ ] Implement Drag & Drop functionality.
 
 ### Phase 3: Sprint 2 - AI Integration
