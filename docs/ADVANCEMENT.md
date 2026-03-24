@@ -35,7 +35,7 @@ Following the principles taught in the IS Modeling course, this project strictly
 
 ### Phase 3: Sprint 2 - AI Integration
 *Duration: 1-2 weeks*
-*Goal: Add the "Smart" layer using Prompt Engineering.*
+*Goal: Add the "Smart" layer.*
 - [ ] Connect the Backend to the OpenAI/Mistral API.
 - [ ] Implement Auto-generation of acceptance criteria.
 - [ ] Implement AI Story Point estimation.
