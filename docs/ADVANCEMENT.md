@@ -4,6 +4,7 @@
 **Course:** Master 1 - Information Systems Modeling
 **Professor:** Ali BOUKEHILA
 **Date:** March 2026
+**Authors:** Philémon VITTET, Sidi HAMADI, Abdelrahman DAHY, Mohammedreda EL AROUI
 
 ---
 
