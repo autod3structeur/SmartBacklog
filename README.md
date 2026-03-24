@@ -31,7 +31,7 @@ All the methodological deliverables requested by the professor are available in 
 
 ## Tech Stack
 - **Frontend:** React.js + Tailwind CSS
-- **Backend:** Python (flask)
+- **Backend:** Python (Flask)
 - **AI Integration:** Prompt Engineering via OpenAI GPT-4o / Mistral AI
 
 ## Getting Started
