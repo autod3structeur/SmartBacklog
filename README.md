@@ -1,23 +1,37 @@
-# SmartBacklog
-The intelligent assistant for Agile product management.
+# SmartBacklog 🧠📋
+
+The intelligent assistant for Agile product management. 
 
 Final project for the **Master 1: Information Systems Modeling** course by Ali BOUKEHILA.
 
 ## 🚀 Concept
-SmartBacklog is a web-based task management application (simplified Kanban) that assists the Product Owner by using AI to automate the most tedious parts of project management:
-1. **Auto-generation of acceptance criteria.**
-2. **Complexity estimation (Story Points).**
-3. **Priority analysis.**
+SmartBacklog is a web-based task management application (simplified Kanban) designed to assist Product Owners and development teams. It uses AI to automate the most tedious parts of Agile project management, preventing "blank page syndrome".
+
+**Core Features:**
+1. **Kanban Board:** A classic visual board (To Do, In Progress, Done) to manage User Stories.
+2. **Auto-generation of Acceptance Criteria:** AI writes testable criteria from a simple title.
+3. **Complexity Estimation:** AI suggests Story Points using the Fibonacci sequence (1, 2, 3, 5, 8, 13).
+4. **Priority Analysis:** AI detects critical keywords and tags tickets as "Blocking" or "Urgent".
+
+## 📖 Agile Methodology (Course Alignment)
+This project strictly follows the Agile methodology taught in class:
+- **Framework:** Scrum
+- **Prioritization:** MoSCoW Method (Must, Should, Could, Won't)
+- **Estimation:** Story Points (Fibonacci sequence)
+- **Lifecycle:** 2 Sprints of 2 weeks each.
+
+### 📚 Project Documentation
+All the methodological deliverables requested by the professor are available in the `/docs` folder:
+- [Product Backlog (Steps 1-5 & MoSCoW)](./docs/BACKLOG.md)
+- [Advancement & Methodology](./docs/ADVANCEMENT.md)
+- [Sprint 1 Planning](./docs/SPRINT_1_PLANNING.md)
+- [Sprint Reports (Review & Retro)](./docs/SPRINT_REPORTS.md)
+- [AI Strategy (Prompt Engineering)](./docs/AI_STRATEGY.md)
 
 ## 🛠 Tech Stack
-- **Frontend:** React + Tailwind CSS
+- **Frontend:** React.js + Tailwind CSS
 - **Backend:** Node.js (Express)
-- **AI:** OpenAI GPT-4o / Mistral AI
-
-## 📂 Project Structure
-- `/docs`: Backlog, Advancement, and Sprint Reports.
-- `/frontend`: React application.
-- `/backend`: Node.js server.
+- **AI Integration:** Prompt Engineering via OpenAI GPT-4o / Mistral AI
 
 ## 🏁 Getting Started
-(Initial setup in progress...)
+*(Development in progress - Sprint 1)*
