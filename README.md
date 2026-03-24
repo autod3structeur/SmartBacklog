@@ -27,6 +27,7 @@ All the methodological deliverables requested by the professor are available in 
 - [Sprint 1 Planning](./docs/SPRINT_1_PLANNING.md)
 - [Sprint Reports (Review & Retro)](./docs/SPRINT_REPORTS.md)
 - [AI Strategy (Prompt Engineering)](./docs/AI_STRATEGY.md)
+- [Jira link](https://abdelrahmandahy85.atlassian.net/jira/software/projects/SMAR/boards/3)
 
 ## 🛠 Tech Stack
 - **Frontend:** React.js + Tailwind CSS
