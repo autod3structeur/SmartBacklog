@@ -19,20 +19,20 @@ Following the principles taught in the IS Modeling course, this project strictly
 
 ## 3. Project Roadmap
 
-### 📍 Phase 1: Planning & Design (Current)
+### Phase 1: Planning & Design (Current)
 - [x] Define Epics and User Stories.
 - [x] Prioritize the Backlog (MoSCoW).
 - [x] Set up the Git repository and documentation structure.
 - [ ] Prepare UI mockups/wireframes (optional but recommended).
 
-### 📍 Phase 2: Sprint 1 - Core App MVP
+### Phase 2: Sprint 1 - Core App MVP
 *Duration: 1-2 weeks*
 *Goal: Provide a functional, standard Kanban board without AI.*
 - [ ] Develop the React Frontend interface.
 - [ ] Develop the Node.js backend (CRUD operations).
 - [ ] Implement Drag & Drop functionality.
 
-### 📍 Phase 3: Sprint 2 - AI Integration
+### Phase 3: Sprint 2 - AI Integration
 *Duration: 1-2 weeks*
 *Goal: Add the "Smart" layer using Prompt Engineering.*
 - [ ] Connect the Backend to the OpenAI/Mistral API.
@@ -42,6 +42,6 @@ Following the principles taught in the IS Modeling course, this project strictly
 
 ## 4. Expected Deliverables Tracker
 As requested for the final evaluation:
-1.  ✅ **The Product Backlog:** Completed (see `BACKLOG.md`).
-2.  ⏳ **Sprint Reports (Review & Retro):** Pending completion of Sprint 1.
-3.  ⏳ **Technical Demonstration:** Pending final delivery.
+1.  **The Product Backlog:** Completed (see `BACKLOG.md`).
+2.  **Sprint Reports (Review & Retro):** Pending completion of Sprint 1.
+3.  **Technical Demonstration:** Pending final delivery.
