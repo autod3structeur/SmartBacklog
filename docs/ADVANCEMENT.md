@@ -36,7 +36,8 @@ Following the principles taught in the IS Modeling course, this project strictly
 ### Phase 3: Sprint 2 - AI Integration
 *Duration: 1-2 weeks*
 *Goal: Add the "Smart" layer.*
-- [ ] Connect the Backend to the OpenAI/Mistral API.
+- [ ] Check weather it's better to use big LLM API like OpenAI/Anthropic/Mistral or use smaller locals LLM for privacy and cost reducing
+- [ ] Connect the Backend to the OpenAI/Mistral API or to the local LLM API.
 - [ ] Implement Auto-generation of acceptance criteria.
 - [ ] Implement AI Story Point estimation.
 - [ ] Final testing and debugging.
