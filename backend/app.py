@@ -2,10 +2,9 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-# On autorise explicitement toutes les origines (*) sur toutes les routes (/api/*)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# On autorise TOUT, partout. C'est le plus simple pour le développement.
+CORS(app)
 
-# Simulation d'une base de données (Liste de tickets)
 tickets_db = [
     {
         "id": 1,
@@ -32,8 +31,8 @@ tickets_db = [
 
 @app.route("/api/tickets", methods=["GET"])
 def get_tickets():
-    """Retourne la liste complète des tickets du backlog."""
     return jsonify(tickets_db)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # On force Flask à écouter sur 127.0.0.1
+    app.run(debug=True, host="127.0.0.1", port=5000)

@@ -6,7 +6,7 @@ function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/tickets")
+    fetch("http://127.0.0.1:5000/api/tickets")
       .then((res) => {
         if (!res.ok) throw new Error("Erreur serveur");
         return res.json();
