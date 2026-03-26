@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "mcp-atlassian": {
+      "command": "uvx",
+      "args": [
+        "mcp-atlassian",
+        "--env-file",
+        "/Users/vitt/phi/cours/info-systems-design/smartbacklog/.env"
+      ]
+    }
+  }
+}
