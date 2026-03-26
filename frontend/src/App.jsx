@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ReactMarkdown from 'react-markdown';
 import { 
   DndContext, 
   closestCorners, 
@@ -20,19 +21,14 @@ import {
   AlertTriangle, 
   GripVertical,
   X,
-  Bot
+  FileSearch,
+  Eye,
+  Edit3
 } from "lucide-react";
 
-// --- TICKET COMPONENT (SORTABLE) ---
+// --- TICKET COMPONENT ---
 function SortableTicket({ ticket, onDelete, onClick }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({ 
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
     id: ticket.id,
     data: { type: 'Ticket', ticket }
   });
@@ -49,16 +45,15 @@ function SortableTicket({ ticket, onDelete, onClick }) {
       style={style} 
       onClick={() => onClick(ticket)}
       className={`group relative bg-white p-3 mb-2 rounded-md border shadow-sm hover:shadow-md transition-all cursor-pointer ${
-        ticket.priority === 'urgent' ? 'border-l-4 border-l-red-500 border-y-gray-200 border-r-gray-200' : 'border-gray-200 hover:border-blue-300'
+        ticket.priority === 'urgent' ? 'border-l-4 border-l-red-500' : 'border-gray-200 hover:border-blue-300'
       }`}
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2">
           <div 
-            {...attributes} 
-            {...listeners} 
+            {...attributes} {...listeners} 
             className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-600 p-1 -ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => e.stopPropagation()} // Évite d'ouvrir la modale quand on veut juste drag
+            onClick={(e) => e.stopPropagation()}
           >
             <GripVertical size={14} />
           </div>
@@ -66,19 +61,18 @@ function SortableTicket({ ticket, onDelete, onClick }) {
         </div>
         <button 
           onClick={(e) => { e.stopPropagation(); onDelete(ticket.id); }}
-          className="text-gray-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50"
+          className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50"
         >
           <Trash2 size={14} />
         </button>
       </div>
-      <p className="text-xs text-gray-500 mb-3 line-clamp-2 h-8">{ticket.description || "Aucune description"}</p>
-      <div className="flex justify-between items-center mt-auto">
-        <span className="text-[11px] font-medium bg-gray-100 px-2 py-0.5 rounded text-gray-600 border border-gray-200">
-          Pts: {ticket.points || 1}
+      <div className="flex justify-between items-center mt-4">
+        <span className="text-[10px] font-bold bg-gray-50 px-2 py-0.5 rounded text-gray-500 border border-gray-100">
+          SP: {ticket.points || 1}
         </span>
         {ticket.priority === 'urgent' && (
-          <span className="text-[10px] text-red-600 font-bold flex items-center gap-1">
-            <AlertTriangle size={12} /> Urgent
+          <span className="text-[10px] text-red-600 font-bold flex items-center gap-1 uppercase tracking-tighter">
+            <AlertTriangle size={10} /> Urgent
           </span>
         )}
       </div>
@@ -86,30 +80,20 @@ function SortableTicket({ ticket, onDelete, onClick }) {
   );
 }
 
-// --- COLUMN COMPONENT (DROPPABLE) ---
+// --- COLUMN COMPONENT ---
 function Column({ id, title, tickets, colorClass, onDelete, onTicketClick }) {
-  const { setNodeRef } = useDroppable({ 
-    id,
-    data: { type: 'Column', status: id }
-  });
+  const { setNodeRef } = useDroppable({ id, data: { type: 'Column', status: id } });
 
   return (
-    <div ref={setNodeRef} className="flex-1 min-w-[280px] flex flex-col bg-gray-50/80 rounded-lg p-3 h-full border border-gray-200">
+    <div ref={setNodeRef} className="flex-1 min-w-[280px] flex flex-col bg-gray-100/50 rounded-lg p-3 h-full border border-gray-200">
       <div className={`flex items-center justify-between mb-3 pb-2 border-b-2 ${colorClass}`}>
-        <h2 className="font-semibold text-xs uppercase tracking-wider text-gray-700">{title}</h2>
-        <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium">
-          {tickets.length}
-        </span>
+        <h2 className="font-bold text-[11px] uppercase tracking-widest text-gray-500">{title}</h2>
+        <span className="text-[10px] font-mono text-gray-400 font-bold">{tickets.length}</span>
       </div>
       
       <SortableContext id={id} items={tickets.map(t => t.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex-1 overflow-y-auto min-h-[150px]">
+        <div className="flex-1 overflow-y-auto min-h-[200px]">
           {tickets.map(t => <SortableTicket key={t.id} ticket={t} onDelete={onDelete} onClick={onTicketClick} />)}
-          {tickets.length === 0 && (
-            <div className="h-24 border-2 border-dashed border-gray-200 rounded-md flex items-center justify-center text-gray-400 text-xs">
-              Déposez des tickets ici
-            </div>
-          )}
         </div>
       </SortableContext>
     </div>
@@ -120,114 +104,69 @@ function Column({ id, title, tickets, colorClass, onDelete, onTicketClick }) {
 function App() {
   const [tickets, setTickets] = useState([]);
   const [activeId, setActiveId] = useState(null);
-  
-  // Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingTicket, setEditingTicket] = useState(null); 
-  
-  // Form State
+  const [modalTab, setModalTab] = useState("write"); // "write" or "preview"
   const [formData, setFormData] = useState({ title: "", description: "", points: 1, priority: "normal" });
   const [aiLoading, setAiLoading] = useState(false);
 
-  // Configuration DND
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/api/tickets")
-      .then(res => res.json())
-      .then(setTickets);
+    fetch("http://127.0.0.1:5000/api/tickets").then(res => res.json()).then(setTickets);
   }, []);
 
-  // --- DND LOGIC ---
-  const handleDragStart = (event) => setActiveId(event.active.id);
-
-  const handleDragOver = (event) => {
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
+    setActiveId(null);
     if (!over) return;
 
-    const activeId = active.id;
-    const overId = over.id;
+    const activeTicket = tickets.find(t => t.id === active.id);
+    const overColumnId = over.data.current?.status || (tickets.find(t => t.id === over.id)?.status);
 
-    const activeTicket = tickets.find(t => t.id === activeId);
-    if (!activeTicket) return;
-
-    const overColumnId = over.data.current?.status || (tickets.find(t => t.id === overId)?.status);
-
-    if (overColumnId && activeTicket.status !== overColumnId) {
-      setTickets(prev => prev.map(t => t.id === activeId ? { ...t, status: overColumnId } : t));
-    }
-  };
-
-  const handleDragEnd = async (event) => {
-    const { active } = event;
-    setActiveId(null);
-
-    const ticketId = active.id;
-    const finalTicket = tickets.find(t => t.id === ticketId);
-
-    if (finalTicket) {
-      await fetch(`http://127.0.0.1:5000/api/tickets/${ticketId}`, {
+    if (activeTicket && overColumnId && activeTicket.status !== overColumnId) {
+      setTickets(prev => prev.map(t => t.id === active.id ? { ...t, status: overColumnId } : t));
+      await fetch(`http://127.0.0.1:5000/api/tickets/${active.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: finalTicket.status })
+        body: JSON.stringify({ status: overColumnId })
       });
     }
   };
 
-  // --- MODAL LOGIC ---
   const openCreateModal = () => {
     setEditingTicket(null);
+    setModalTab("write");
     setFormData({ title: "", description: "", points: 1, priority: "normal" });
     setShowModal(true);
   };
 
   const openEditModal = (ticket) => {
     setEditingTicket(ticket);
-    setFormData({ 
-      title: ticket.title, 
-      description: ticket.description || "", 
-      points: ticket.points || 1, 
-      priority: ticket.priority || "normal" 
-    });
+    setModalTab("preview"); // Par défaut on affiche le rendu Markdown en édition
+    setFormData({ title: ticket.title, description: ticket.description || "", points: ticket.points || 1, priority: ticket.priority || "normal" });
     setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!formData.title) return;
-
-    if (editingTicket) {
-      // Édition
-      const res = await fetch(`http://127.0.0.1:5000/api/tickets/${editingTicket.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-      const updated = await res.json();
-      setTickets(prev => prev.map(t => t.id === updated.id ? updated : t));
-    } else {
-      // Création
-      const res = await fetch("http://127.0.0.1:5000/api/tickets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, status: "todo" })
-      });
-      const created = await res.json();
-      setTickets(prev => [...prev, created]);
-    }
+    const method = editingTicket ? "PATCH" : "POST";
+    const url = editingTicket ? `http://127.0.0.1:5000/api/tickets/${editingTicket.id}` : "http://127.0.0.1:5000/api/tickets";
+    
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editingTicket ? formData : { ...formData, status: "todo" })
+    });
+    const result = await res.json();
+    
+    if (editingTicket) setTickets(prev => prev.map(t => t.id === result.id ? result : t));
+    else setTickets(prev => [...prev, result]);
     
     setShowModal(false);
   };
 
-  const handleDelete = async (id) => {
-    await fetch(`http://127.0.0.1:5000/api/tickets/${id}`, { method: "DELETE" });
-    setTickets(prev => prev.filter(t => t.id !== id));
-    if (editingTicket && editingTicket.id === id) setShowModal(false);
-  };
-
   const handleAI = async () => {
-    if (!formData.title) return alert("Veuillez définir un titre pour analyser la requête.");
+    if (!formData.title) return;
     setAiLoading(true);
     try {
       const res = await fetch("http://127.0.0.1:5000/api/ai/generate", {
@@ -236,147 +175,101 @@ function App() {
         body: JSON.stringify({ title: formData.title })
       });
       const data = await res.json();
-      setFormData(prev => ({
-        ...prev,
-        description: data.description,
-        points: data.points,
-        priority: data.priority
-      }));
+      setFormData(prev => ({ ...prev, description: data.description, points: data.points, priority: data.priority }));
+      setModalTab("preview"); // On montre direct le résultat Markdown
     } finally {
       setAiLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col p-6 font-sans text-gray-900">
+    <div className="min-h-screen bg-gray-50 flex flex-col p-6 font-sans text-slate-900">
       <div className="max-w-[1400px] w-full mx-auto flex flex-col h-full">
         
-        {/* Header Sober */}
         <header className="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">SmartBacklog</h1>
-            <p className="text-gray-500 text-xs mt-1">Workspace / Project Alpha</p>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-slate-800 rounded flex items-center justify-center text-white font-bold text-lg">S</div>
+            <h1 className="text-xl font-bold text-slate-800">SmartBacklog</h1>
           </div>
-          <button 
-            onClick={openCreateModal}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm"
-          >
-            <Plus size={16} /> Create Issue
+          <button onClick={openCreateModal} className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded font-semibold text-xs transition-all shadow-sm active:scale-95">
+            + NEW ISSUE
           </button>
         </header>
 
-        {/* Board */}
-        <DndContext 
-          sensors={sensors} 
-          collisionDetection={closestCorners} 
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} onDragStart={(e) => setActiveId(e.active.id)}>
           <div className="flex flex-col lg:flex-row gap-6 min-h-[600px] items-start">
-            <Column id="todo" title="To Do" tickets={tickets.filter(t => t.status === 'todo')} colorClass="border-gray-400" onDelete={handleDelete} onTicketClick={openEditModal} />
-            <Column id="doing" title="In Progress" tickets={tickets.filter(t => t.status === 'doing')} colorClass="border-blue-500" onDelete={handleDelete} onTicketClick={openEditModal} />
-            <Column id="done" title="Done" tickets={tickets.filter(t => t.status === 'done')} colorClass="border-green-500" onDelete={handleDelete} onTicketClick={openEditModal} />
+            <Column id="todo" title="To Do" tickets={tickets.filter(t => t.status === 'todo')} colorClass="border-slate-300" onDelete={(id) => { fetch(`http://127.0.0.1:5000/api/tickets/${id}`, {method:"DELETE"}); setTickets(t => t.filter(x=>x.id!==id)) }} onTicketClick={openEditModal} />
+            <Column id="doing" title="In Progress" tickets={tickets.filter(t => t.status === 'doing')} colorClass="border-blue-400" onDelete={(id) => { fetch(`http://127.0.0.1:5000/api/tickets/${id}`, {method:"DELETE"}); setTickets(t => t.filter(x=>x.id!==id)) }} onTicketClick={openEditModal} />
+            <Column id="done" title="Done" tickets={tickets.filter(t => t.status === 'done')} colorClass="border-emerald-400" onDelete={(id) => { fetch(`http://127.0.0.1:5000/api/tickets/${id}`, {method:"DELETE"}); setTickets(t => t.filter(x=>x.id!==id)) }} onTicketClick={openEditModal} />
           </div>
-
           <DragOverlay>
-            {activeId ? (
-              <div className="bg-white p-4 rounded-md shadow-xl border border-blue-400 w-[280px] rotate-2 opacity-95 cursor-grabbing">
-                <h4 className="font-medium text-sm text-gray-800">{tickets.find(t => t.id === activeId)?.title}</h4>
-              </div>
-            ) : null}
+            {activeId ? <div className="bg-white p-4 rounded border border-blue-400 w-[280px] shadow-2xl opacity-90"><h4 className="font-bold text-sm">{tickets.find(t=>t.id===activeId)?.title}</h4></div> : null}
           </DragOverlay>
         </DndContext>
       </div>
 
-      {/* Modal Standard (Edit / Create) */}
       {showModal && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-2xl rounded-lg shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-3xl rounded-lg shadow-2xl flex flex-col max-h-[90vh]">
             
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-5 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-800">
-                {editingTicket ? `Issue-${editingTicket.id}` : "Create New Issue"}
-              </h2>
-              <div className="flex items-center gap-2">
-                {editingTicket && (
-                  <button onClick={() => handleDelete(editingTicket.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors">
-                    <Trash2 size={16} />
-                  </button>
-                )}
-                <button onClick={() => setShowModal(false)} className="p-1.5 text-gray-400 hover:text-gray-800 rounded hover:bg-gray-100 transition-colors">
-                  <X size={16} />
-                </button>
-              </div>
+            <div className="flex justify-between items-center p-4 border-b">
+              <span className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">
+                {editingTicket ? `Issue-${editingTicket.id}` : "New Entry"}
+              </span>
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={20}/></button>
             </div>
             
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="flex flex-wrap gap-4 mb-6">
-                <div className="flex-1 min-w-[200px]">
-                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Title</label>
-                   <input 
-                     type="text" 
-                     className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none font-medium transition-all"
-                     value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
-                   />
+            <div className="p-8 overflow-y-auto flex-1">
+              <div className="flex flex-wrap gap-6 mb-8">
+                <div className="flex-1 min-w-[300px]">
+                   <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Issue Title</label>
+                   <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded focus:bg-white focus:border-blue-500 outline-none font-semibold text-lg" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
                 </div>
                 <div className="w-24">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Points</label>
-                  <select 
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer"
-                    value={formData.points} onChange={e => setFormData({...formData, points: Number(e.target.value)})}
-                  >
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Points</label>
+                  <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded font-mono text-sm focus:border-blue-500 outline-none" value={formData.points} onChange={e => setFormData({...formData, points: Number(e.target.value)})}>
                     {[1, 2, 3, 5, 8, 13, 21].map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div className="w-32">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Priority</label>
-                  <select 
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer"
-                    value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}
-                  >
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Priority</label>
+                  <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded text-sm font-bold focus:border-blue-500 outline-none" value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}>
                     <option value="normal">Normal</option>
                     <option value="urgent">Urgent</option>
                   </select>
                 </div>
               </div>
 
-              <div className="mb-2">
-                <div className="flex justify-between items-end mb-2">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</label>
-                  <button 
-                    onClick={handleAI} disabled={aiLoading || !formData.title}
-                    className="flex items-center gap-1.5 text-xs font-medium text-purple-600 bg-purple-50 border border-purple-100 hover:bg-purple-100 px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 disabled:grayscale"
-                  >
-                    {aiLoading ? (
-                      <div className="w-3.5 h-3.5 border-2 border-purple-600/30 border-t-purple-600 rounded-full animate-spin" />
-                    ) : <Bot size={14} />}
-                    {aiLoading ? "Generating..." : "Generate AI criteria"}
+              <div className="flex flex-col">
+                <div className="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
+                  <div className="flex gap-4">
+                    <button onClick={() => setModalTab("write")} className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 pb-1 ${modalTab === 'write' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                      <Edit3 size={12}/> Write
+                    </button>
+                    <button onClick={() => setModalTab("preview")} className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 pb-1 ${modalTab === 'preview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                      <Eye size={12}/> Preview
+                    </button>
+                  </div>
+                  <button onClick={handleAI} disabled={aiLoading || !formData.title} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white bg-slate-800 hover:bg-blue-600 px-4 py-2 rounded-full transition-all disabled:opacity-30">
+                    {aiLoading ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"/> : <FileSearch size={14}/>}
+                    Analyze & Document
                   </button>
                 </div>
-                <textarea 
-                  rows={10}
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-md text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-y font-mono leading-relaxed transition-all"
-                  value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
-                />
+
+                {modalTab === "write" ? (
+                  <textarea rows={12} className="w-full p-4 bg-slate-50 border border-slate-200 rounded font-mono text-sm focus:bg-white focus:border-blue-500 outline-none resize-none leading-relaxed" placeholder="Detailed technical specifications..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+                ) : (
+                  <div className="w-full p-4 bg-white border border-slate-100 rounded min-h-[280px] prose prose-slate prose-sm max-w-none">
+                    <ReactMarkdown>{formData.description || "*No content to preview*"}</ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-lg">
-              <button 
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSave} disabled={!formData.title}
-                className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400 shadow-sm transition-all active:scale-95"
-              >
-                {editingTicket ? "Save Changes" : "Create Issue"}
+            <div className="p-4 bg-slate-50 border-t flex justify-end gap-3 rounded-b-lg">
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600">Cancel</button>
+              <button onClick={handleSave} disabled={!formData.title} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest rounded shadow-md transition-all active:scale-95">
+                {editingTicket ? "Update Issue" : "Create Issue"}
               </button>
             </div>
           </div>
