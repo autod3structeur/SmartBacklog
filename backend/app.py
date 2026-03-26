@@ -1,60 +1,87 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import json
+import os
 
 app = Flask(__name__)
-# Configuration CORS très large pour le développement
 CORS(app)
 
-# Simulation d'une base de données
-tickets_db = [
-    {
-        "id": 1,
-        "title": "Initialisation du Projet",
-        "description": "Mise en place de l'architecture Flask et React.",
-        "status": "done",
-        "priority": "normal"
-    },
-    {
-        "id": 2,
-        "title": "Configuration du CORS",
-        "description": "Permettre la communication entre le client et le serveur.",
-        "status": "done",
-        "priority": "urgent"
-    },
-    {
-        "id": 3,
-        "title": "Création du Tableau Kanban",
-        "description": "Développer l'interface visuelle avec les 3 colonnes.",
-        "status": "doing",
-        "priority": "normal"
-    },
-    {
-        "id": 4,
-        "title": "Filtrage des données",
-        "description": "Utiliser .filter() pour séparer les tickets par colonnes.",
-        "status": "todo",
-        "priority": "normal"
-    }
-]
+DATA_FILE = "data.json"
+
+# Initialisation de la base de données (lecture depuis fichier ou défaut)
+if os.path.exists(DATA_FILE):
+    with open(DATA_FILE, "r") as f:
+        tickets_db = json.load(f)
+else:
+    tickets_db = [
+        {"id": 1, "title": "Setup Project", "description": "Base technical structure.", "status": "done", "priority": "normal", "points": 3},
+        {"id": 2, "title": "Configure AI", "description": "Implement prompt engineering.", "status": "todo", "priority": "urgent", "points": 8}
+    ]
+
+def save_db():
+    with open(DATA_FILE, "w") as f:
+        json.dump(tickets_db, f)
 
 @app.route("/api/tickets", methods=["GET"])
 def get_tickets():
-    """Récupère tous les tickets."""
     return jsonify(tickets_db)
 
-@app.route("/api/tickets/<int:ticket_id>", methods=["PATCH"])
-def update_ticket_status(ticket_id):
-    """Modifie le statut d'un ticket spécifique."""
+@app.route("/api/tickets", methods=["POST"])
+def create_ticket():
     data = request.json
-    new_status = data.get("status")
-    
-    # On cherche le ticket dans notre "base de données"
+    new_ticket = {
+        "id": max([t["id"] for t in tickets_db] + [0]) + 1,
+        "title": data.get("title", "Sans titre"),
+        "description": data.get("description", ""),
+        "status": data.get("status", "todo"),
+        "priority": data.get("priority", "normal"),
+        "points": data.get("points", 1)
+    }
+    tickets_db.append(new_ticket)
+    save_db()
+    return jsonify(new_ticket), 201
+
+@app.route("/api/tickets/<int:ticket_id>", methods=["PATCH"])
+def update_ticket(ticket_id):
+    data = request.json
     for ticket in tickets_db:
         if ticket["id"] == ticket_id:
-            ticket["status"] = new_status
-            return jsonify(ticket), 200
-            
-    return jsonify({"error": "Ticket non trouvé"}), 404
+            ticket.update(data)
+            save_db()
+            return jsonify(ticket)
+    return jsonify({"error": "Not found"}), 404
+
+@app.route("/api/tickets/<int:ticket_id>", methods=["DELETE"])
+def delete_ticket(ticket_id):
+    global tickets_db
+    tickets_db = [t for t in tickets_db if t["id"] != ticket_id]
+    save_db()
+    return "", 204
+
+@app.route("/api/ai/generate", methods=["POST"])
+def ai_generate():
+    """
+    Expert Agile Coach AI Engine.
+    Simulates high-quality LLM output for criteria and points.
+    """
+    title = request.json.get("title", "")
+    
+    # Simulation de l'IA (Expert Agile Coach)
+    criteria = f"### Acceptance Criteria for: {title}\n" \
+               "- The feature must be fully responsive.\n" \
+               "- Edge cases must be handled gracefully.\n" \
+               "- Unit tests must cover at least 80% of logic.\n" \
+               "- Documentation must be updated."
+               
+    # Logique de suggestion de points (Fibonacci)
+    points = 5 if len(title) > 10 else 3
+    priority = "urgent" if "urgent" in title.lower() or "bug" in title.lower() else "normal"
+    
+    return jsonify({
+        "description": criteria,
+        "points": points,
+        "priority": priority
+    })
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)

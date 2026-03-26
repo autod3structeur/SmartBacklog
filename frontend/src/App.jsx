@@ -1,24 +1,32 @@
 import { useState, useEffect } from "react";
 import { 
   DndContext, 
-  closestCenter, 
-  KeyboardSensor, 
+  closestCorners, 
   PointerSensor, 
   useSensor, 
   useSensors,
-  DragOverlay
+  DragOverlay,
+  defaultDropAnimationSideEffects
 } from "@dnd-kit/core";
 import { 
   arrayMove, 
   SortableContext, 
-  sortableKeyboardCoordinates, 
   verticalListSortingStrategy,
   useSortable
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { 
+  Plus, 
+  Trash2, 
+  Sparkles, 
+  Search, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Clock 
+} from "lucide-react";
 
-// --- COMPOSANT TICKET (DÉPLAÇABLE) ---
-function SortableTicket({ ticket }) {
+// --- TICKET COMPONENT ---
+function SortableTicket({ ticket, onDelete }) {
   const {
     attributes,
     listeners,
@@ -29,141 +37,243 @@ function SortableTicket({ ticket }) {
   } = useSortable({ id: ticket.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-    border: "1px solid #ddd", 
-    padding: "12px", 
-    marginBottom: "12px", 
-    borderRadius: "6px",
-    backgroundColor: "white",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
-    borderLeft: ticket.priority === "urgent" ? "5px solid #e74c3c" : "5px solid #3498db",
-    cursor: "grab"
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 1000 : 1,
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <h4 style={{ margin: "0 0 8px 0", fontSize: "1rem" }}>{ticket.title}</h4>
-      <p style={{ fontSize: "0.85rem", color: "#666", margin: 0 }}>{ticket.description}</p>
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className={`group relative bg-white p-4 mb-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
+        ticket.priority === 'urgent' ? 'border-l-4 border-l-red-500' : 'border-l-4 border-l-blue-500'
+      }`}
+      {...attributes} 
+      {...listeners}
+    >
+      <div className="flex justify-between items-start mb-2">
+        <h4 className="font-semibold text-gray-800 text-sm line-clamp-1">{ticket.title}</h4>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onDelete(ticket.id); }}
+          className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+      <p className="text-xs text-gray-500 line-clamp-2 mb-3 h-8">{ticket.description || "Pas de description..."}</p>
+      <div className="flex justify-between items-center">
+        <span className="text-[10px] font-bold bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+          SP: {ticket.points || 1}
+        </span>
+        {ticket.priority === 'urgent' && (
+          <span className="text-[10px] text-red-600 font-bold flex items-center gap-0.5">
+            <AlertTriangle size={10} /> URGENT
+          </span>
+        )}
+      </div>
     </div>
   );
 }
 
-// --- COMPOSANT PRINCIPAL ---
+// --- COLUMN COMPONENT ---
+function Column({ id, title, icon, tickets, colorClass, onDelete }) {
+  return (
+    <div className="flex-1 min-w-[300px] flex flex-col bg-gray-100/60 rounded-xl p-4 h-full">
+      <div className={`flex items-center gap-2 mb-4 pb-2 border-b-2 ${colorClass}`}>
+        {icon}
+        <h2 className="font-bold text-sm tracking-wide text-gray-700">{title}</h2>
+        <span className="ml-auto bg-gray-200 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-mono">
+          {tickets.length}
+        </span>
+      </div>
+      
+      <SortableContext id={id} items={tickets.map(t => t.id)} strategy={verticalListSortingStrategy}>
+        <div className="flex-1 overflow-y-auto pr-1">
+          {tickets.length > 0 ? (
+            tickets.map(t => <SortableTicket key={t.id} ticket={t} onDelete={onDelete} />)
+          ) : (
+            <div className="border-2 border-dashed border-gray-300 rounded-lg h-24 flex items-center justify-center text-gray-400 text-xs italic">
+              Déposez un ticket ici
+            </div>
+          )}
+        </div>
+      </SortableContext>
+    </div>
+  );
+}
+
+// --- MAIN APP ---
 function App() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [activeId, setActiveId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
-  // Configuration des capteurs pour la souris et le clavier
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
-  // 1. Récupération initiale des tickets
   useEffect(() => {
     fetch("http://127.0.0.1:5000/api/tickets")
-      .then((res) => res.json())
-      .then((data) => {
-        setTickets(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      .then(res => res.json())
+      .then(data => { setTickets(data); setLoading(false); });
   }, []);
 
-  // 2. LOGIQUE DE FIN DE DRAG (C'est là que la magie opère)
-  const handleDragEnd = (event) => {
+  const handleCreate = async (aiData = null) => {
+    const payload = aiData ? {
+      title: newTitle,
+      description: aiData.description,
+      points: aiData.points,
+      priority: aiData.priority
+    } : { title: newTitle, description: newDesc };
+
+    const res = await fetch("http://127.0.0.1:5000/api/tickets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const created = await res.json();
+    setTickets([...tickets, created]);
+    setShowModal(false);
+    setNewTitle("");
+    setNewDesc("");
+  };
+
+  const handleMagicAI = async () => {
+    if (!newTitle) return alert("Entrez un titre d'abord !");
+    setAiLoading(true);
+    const res = await fetch("http://127.0.0.1:5000/api/ai/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle })
+    });
+    const data = await res.json();
+    setNewDesc(data.description);
+    setAiLoading(false);
+    handleCreate(data);
+  };
+
+  const handleDelete = async (id) => {
+    await fetch(`http://127.0.0.1:5000/api/tickets/${id}`, { method: "DELETE" });
+    setTickets(tickets.filter(t => t.id !== id));
+  };
+
+  const handleDragStart = (event) => setActiveId(event.active.id);
+
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
+    setActiveId(null);
 
-    if (over && active.id !== over.id) {
-      // Pour ce projet, on va simplifier : 
-      // Si on dépose un ticket sur une colonne (ou un autre ticket), on change son statut.
-      
-      const ticketId = active.id;
-      const overId = over.id; // L'ID de l'élément sur lequel on a lâché.
+    if (!over) return;
 
-      // On trouve le nouveau statut basé sur l'ID de la cible
-      // (Dans un vrai projet, on utiliserait des IDs de colonnes, ici on simplifie)
-      let newStatus = "";
-      if (overId === "todo-zone") newStatus = "todo";
-      else if (overId === "doing-zone") newStatus = "doing";
-      else if (overId === "done-zone") newStatus = "done";
-      else {
-        // Si on lâche sur un autre ticket, on prend le statut de ce ticket
-        const targetTicket = tickets.find(t => t.id === overId);
-        if (targetTicket) newStatus = targetTicket.status;
-      }
+    const ticketId = active.id;
+    const overId = over.id;
 
-      if (newStatus) {
-        // A. Mise à jour visuelle immédiate (Optimistic UI)
-        const updatedTickets = tickets.map(t => 
-          t.id === ticketId ? { ...t, status: newStatus } : t
-        );
-        setTickets(updatedTickets);
+    // Déterminer le nouveau statut
+    let newStatus = "";
+    if (["todo", "doing", "done"].includes(overId)) newStatus = overId;
+    else {
+      const target = tickets.find(t => t.id === overId);
+      if (target) newStatus = target.status;
+    }
 
-        // B. Envoi de l'ordre au serveur Flask
-        fetch(`http://127.0.0.1:5000/api/tickets/${ticketId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus })
-        });
-      }
+    if (newStatus) {
+      const updated = tickets.map(t => t.id === ticketId ? { ...t, status: newStatus } : t);
+      setTickets(updated);
+      await fetch(`http://127.0.0.1:5000/api/tickets/${ticketId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
     }
   };
 
-  if (loading) return <p style={{ textAlign: "center", padding: "50px" }}>Chargement...</p>;
-
-  // Filtrage des tickets par colonnes
-  const columns = [
-    { id: "todo-zone", title: "🔵 À FAIRE", status: "todo", color: "#2980b9" },
-    { id: "doing-zone", title: "🟡 EN COURS", status: "doing", color: "#f39c12" },
-    { id: "done-zone", title: "🟢 TERMINÉ", status: "done", color: "#27ae60" }
-  ];
+  if (loading) return <div className="h-screen flex items-center justify-center font-mono animate-pulse">Chargement du Backlog...</div>;
 
   return (
-    <div style={{ padding: "30px", fontFamily: "sans-serif", backgroundColor: "#f0f2f5", minHeight: "100vh" }}>
-      <h1 style={{ textAlign: "center", color: "#2c3e50", marginBottom: "40px" }}>SmartBacklog 🧠 Glisser-Déposer</h1>
-      
-      <DndContext 
-        sensors={sensors} 
-        collisionDetection={closestCenter} 
-        onDragEnd={handleDragEnd}
-      >
-        <div style={{ display: "flex", gap: "25px", justifyContent: "center", maxWidth: "1200px", margin: "0 auto" }}>
-          
-          {columns.map((col) => (
-            <div key={col.id} style={{ flex: 1, backgroundColor: "#ebedef", padding: "15px", borderRadius: "10px" }}>
-              <h2 style={{ fontSize: "1.1rem", color: col.color, borderBottom: `3px solid ${col.color}`, paddingBottom: "10px", textAlign: "center" }}>
-                {col.title}
-              </h2>
-
-              {/* Zone de dépôt Sortable */}
-              <SortableContext 
-                id={col.id}
-                items={tickets.filter(t => t.status === col.status).map(t => t.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div style={{ marginTop: "20px", minHeight: "200px" }}>
-                  {tickets.filter(t => t.status === col.status).map((ticket) => (
-                    <SortableTicket key={ticket.id} ticket={ticket} />
-                  ))}
-                  {/* Une petite aide visuelle pour lâcher dans la zone vide */}
-                  <div style={{ height: "50px", border: "2px dashed #ccc", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", color: "#999", fontSize: "0.8rem" }}>
-                    Lâcher ici
-                  </div>
-                </div>
-              </SortableContext>
-            </div>
-          ))}
+    <div className="min-h-screen bg-gray-50 flex flex-col p-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-10 max-w-6xl w-full mx-auto">
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-600 p-2 rounded-lg text-white"><Sparkles /></div>
+          <h1 className="text-2xl font-black text-gray-800 tracking-tight">SmartBacklog</h1>
         </div>
-      </DndContext>
+        <button 
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition-transform active:scale-95"
+        >
+          <Plus size={20} /> Nouveau Ticket
+        </button>
+      </div>
+
+      {/* Kanban Board */}
+      <div className="flex-1 max-w-7xl w-full mx-auto">
+        <DndContext 
+          sensors={sensors} 
+          collisionDetection={closestCorners} 
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex gap-6 h-[calc(100vh-200px)]">
+            <Column id="todo" title="À FAIRE" icon={<Clock size={16} />} tickets={tickets.filter(t => t.status === 'todo')} colorClass="border-blue-500 text-blue-600" onDelete={handleDelete} />
+            <Column id="doing" title="EN COURS" icon={<Search size={16} />} tickets={tickets.filter(t => t.status === 'doing')} colorClass="border-amber-500 text-amber-600" onDelete={handleDelete} />
+            <Column id="done" title="TERMINÉ" icon={<CheckCircle2 size={16} />} tickets={tickets.filter(t => t.status === 'done')} colorClass="border-emerald-500 text-emerald-600" onDelete={handleDelete} />
+          </div>
+
+          <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.5' } } }) }}>
+            {activeId ? (
+              <div className="bg-white p-4 rounded-lg shadow-2xl border-2 border-blue-400 opacity-90 scale-105 rotate-2">
+                <h4 className="font-bold text-sm">{tickets.find(t => t.id === activeId)?.title}</h4>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
+
+      {/* Modal Creation */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Plus size={24} className="text-blue-600" /> Créer une Story
+              </h2>
+              <div className="space-y-4">
+                <input 
+                  type="text" placeholder="Titre du ticket (ex: Page Login)"
+                  className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={newTitle} onChange={e => setNewTitle(e.target.value)}
+                />
+                <textarea 
+                  placeholder="Description ou critères..." rows={4}
+                  className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                  value={newDesc} onChange={e => setNewDesc(e.target.value)}
+                />
+              </div>
+              <div className="mt-6 flex gap-3">
+                <button 
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 py-2 text-gray-500 hover:bg-gray-100 rounded-xl font-bold transition-colors"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={handleMagicAI} disabled={aiLoading}
+                  className="flex-[2] py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all active:scale-95 disabled:opacity-50"
+                >
+                  <Sparkles size={18} className={aiLoading ? "animate-spin" : ""} /> {aiLoading ? "Magie en cours..." : "✨ Magie IA"}
+                </button>
+              </div>
+              <p className="mt-4 text-[10px] text-center text-gray-400 italic">
+                Le bouton Magie IA génère les critères, suggère les points et crée le ticket.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
