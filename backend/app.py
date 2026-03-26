@@ -2,7 +2,8 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app) # Autorise React à appeler Flask
+# On autorise explicitement toutes les origines (*) sur toutes les routes (/api/*)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Simulation d'une base de données (Liste de tickets)
 tickets_db = [
