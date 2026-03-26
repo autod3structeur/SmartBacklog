@@ -4,10 +4,35 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app) # Autorise React à appeler Flask
 
-@app.route("/")
-def hello_world():
+# Simulation d'une base de données (Liste de tickets)
+tickets_db = [
+    {
+        "id": 1,
+        "title": "Initialisation du Projet",
+        "description": "Mise en place de l'architecture Flask et React.",
+        "status": "done",
+        "priority": "normal"
+    },
+    {
+        "id": 2,
+        "title": "Configuration du CORS",
+        "description": "Permettre la communication entre le client et le serveur.",
+        "status": "done",
+        "priority": "urgent"
+    },
+    {
+        "id": 3,
+        "title": "Création du Tableau Kanban",
+        "description": "Développer l'interface visuelle avec les 3 colonnes.",
+        "status": "todo",
+        "priority": "normal"
+    }
+]
 
-    return jsonify({"message": "Hello depuis Flask (via JSON) !"})
+@app.route("/api/tickets", methods=["GET"])
+def get_tickets():
+    """Retourne la liste complète des tickets du backlog."""
+    return jsonify(tickets_db)
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

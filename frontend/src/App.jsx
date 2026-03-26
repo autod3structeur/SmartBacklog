@@ -1,49 +1,53 @@
 import { useState, useEffect } from "react";
 
 function App() {
-  // 1. État pour stocker le message du serveur
-  const [serverMessage, setServerMessage] = useState("Chargement...");
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // 2. Appel API au chargement du composant
   useEffect(() => {
-    fetch("http://localhost:5000/")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Erreur réseau");
-        }
-        return response.json(); // On attend du JSON cette fois
+    fetch("http://localhost:5000/api/tickets")
+      .then((res) => {
+        if (!res.ok) throw new Error("Erreur serveur");
+        return res.json();
       })
       .then((data) => {
-        setServerMessage(data.message); // On accède à la clé "message" de l'objet JSON
+        setTickets(data);
+        setLoading(false);
       })
-      .catch((error) => {
-        console.error("Erreur Fetch:", error);
-        setServerMessage("Impossible de contacter le serveur Flask.");
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
       });
   }, []);
 
-  // 3. Interface utilisateur (JSX)
+  if (loading) return <p>Chargement du backlog...</p>;
+  if (error) return <p style={{ color: "red" }}>Erreur: {error}</p>;
+
   return (
-    <div style={{ 
-      fontFamily: "Arial, sans-serif", 
-      display: "flex", 
-      flexDirection: "column", 
-      alignItems: "center", 
-      justifyContent: "center", 
-      height: "100vh",
-      backgroundColor: "#f0f2f5"
-    }}>
-      <div style={{ 
-        padding: "20px", 
-        borderRadius: "8px", 
-        backgroundColor: "white", 
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
-      }}>
-        <h1 style={{ color: "#1a73e8" }}>SmartBacklog</h1>
-        <hr />
-        <p style={{ fontSize: "1.2rem", color: "#5f6368" }}>
-          Statut du Backend : <strong>{serverMessage}</strong>
-        </p>
+    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
+      <h1 style={{ color: "#2c3e50" }}>SmartBacklog : Liste des Tickets</h1>
+      <hr />
+      
+      <div style={{ display: "grid", gap: "10px", marginTop: "20px" }}>
+        {tickets.map((ticket) => (
+          <div 
+            key={ticket.id} 
+            style={{ 
+              border: "1px solid #ddd", 
+              padding: "15px", 
+              borderRadius: "8px",
+              backgroundColor: ticket.status === "done" ? "#f9f9f9" : "white",
+              borderLeft: ticket.priority === "urgent" ? "5px solid #e74c3c" : "5px solid #3498db"
+            }}
+          >
+            <h3 style={{ margin: "0 0 10px 0" }}>{ticket.title}</h3>
+            <p style={{ fontSize: "0.9rem", color: "#666" }}>{ticket.description}</p>
+            <div style={{ fontSize: "0.8rem", fontWeight: "bold" }}>
+              Status: <span style={{ color: ticket.status === "done" ? "#27ae60" : "#f39c12" }}>{ticket.status.toUpperCase()}</span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
