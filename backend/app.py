@@ -5,6 +5,7 @@ app = Flask(__name__)
 # On autorise TOUT, partout. C'est le plus simple pour le développement.
 CORS(app)
 
+# Simulation d'une base de données plus riche
 tickets_db = [
     {
         "id": 1,
@@ -24,6 +25,13 @@ tickets_db = [
         "id": 3,
         "title": "Création du Tableau Kanban",
         "description": "Développer l'interface visuelle avec les 3 colonnes.",
+        "status": "doing",
+        "priority": "normal"
+    },
+    {
+        "id": 4,
+        "title": "Filtrage des données",
+        "description": "Utiliser .filter() pour séparer les tickets par colonnes.",
         "status": "todo",
         "priority": "normal"
     }
