@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-kanban-bg: #f3f4f6;
+  --color-todo-header: #2563eb;
+  --color-doing-header: #d97706;
+  --color-done-header: #059669;
+}
 
 body {
   @apply bg-gray-50 text-gray-900;
