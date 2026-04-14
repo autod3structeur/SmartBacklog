@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import json
 import os
+import re
 import torch
 from transformers import pipeline
 
@@ -71,7 +72,6 @@ def delete_ticket(ticket_id):
 # --- ROUTE IA GÉNÉRATION ---
 @app.route("/api/ai/generate", methods=["POST"])
 def ai_generate():
-    import re
     title = request.json.get("title", "")
     title_lower = title.lower()
 
@@ -123,41 +123,6 @@ Respond ONLY with 3 lines, each starting with a dash (-). No intro, no explanati
         "points": suggested_points,
         "priority": priority
     })
-    
-    # Génération
-    prompt = generator.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    outputs = generator(prompt, max_new_tokens=150, do_sample=True, temperature=0.7)
-    response_text = outputs[0]["generated_text"].split("<|im_start|>assistant")[-1].strip()
-    
-    # Analyse basique de la réponse pour extraire un chiffre (Story Point)
-    # Si l'IA n'en donne pas clairement, on met 3 par défaut
-    import re
-    # Clean up the response to only keep Acceptance Criteria section
-    if "Story Points:" in response_text:
-        response_text = response_text.split("Story Points:")[0].strip()
-
-    # Smart story point estimation based on title complexity
-    title_lower = title.lower()
-    words = len(title.split())
-
-    if any(k in title_lower for k in ["auth", "login", "security", "payment", "encrypt"]):
-        suggested_points = 8
-    elif any(k in title_lower for k in ["dashboard", "report", "search", "filter", "export"]):
-        suggested_points = 5
-    elif any(k in title_lower for k in ["button", "label", "text", "color", "icon", "typo"]):
-        suggested_points = 1
-    elif words <= 3:
-        suggested_points = 2
-    elif words <= 6:
-        suggested_points = 3
-    else:
-        suggested_points = 5
-    
-    return jsonify({
-        "description": response_text,
-        "points": suggested_points,
-        "priority": "urgent" if "urgent" in title.lower() or "bug" in title.lower() else "normal"
-    }) 
 
 if __name__ == "__main__":
     # Note : debug=True peut charger le modèle 2 fois en mémoire à cause du reloader de Flask.

@@ -15,16 +15,18 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useDroppable } from "@dnd-kit/core";
-import { 
-  Plus, 
-  Trash2, 
-  AlertTriangle, 
+import {
+  Plus,
+  Trash2,
+  AlertTriangle,
   GripVertical,
   X,
   FileSearch,
   Eye,
   Edit3
 } from "lucide-react";
+
+const API = "http://127.0.0.1:5000";
 
 // --- TICKET COMPONENT ---
 function SortableTicket({ ticket, onDelete, onClick }) {
@@ -113,7 +115,7 @@ function App() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/api/tickets").then(res => res.json()).then(setTickets);
+    fetch(`${API}/api/tickets`).then(res => res.json()).then(setTickets);
   }, []);
 
   const handleDragEnd = async (event) => {
@@ -126,7 +128,7 @@ function App() {
 
     if (activeTicket && overColumnId && activeTicket.status !== overColumnId) {
       setTickets(prev => prev.map(t => t.id === active.id ? { ...t, status: overColumnId } : t));
-      await fetch(`http://127.0.0.1:5000/api/tickets/${active.id}`, {
+      await fetch(`${API}/api/tickets/${active.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: overColumnId })
@@ -150,7 +152,7 @@ function App() {
 
   const handleSave = async () => {
     const method = editingTicket ? "PATCH" : "POST";
-    const url = editingTicket ? `http://127.0.0.1:5000/api/tickets/${editingTicket.id}` : "http://127.0.0.1:5000/api/tickets";
+    const url = editingTicket ? `${API}/api/tickets/${editingTicket.id}` : `${API}/api/tickets`;
     
     const res = await fetch(url, {
       method,
@@ -169,7 +171,7 @@ function App() {
     if (!formData.title) return;
     setAiLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:5000/api/ai/generate", {
+      const res = await fetch(`${API}/api/ai/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: formData.title })
@@ -198,9 +200,9 @@ function App() {
 
         <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd} onDragStart={(e) => setActiveId(e.active.id)}>
           <div className="flex flex-col lg:flex-row gap-6 min-h-[600px] items-start">
-            <Column id="todo" title="To Do" tickets={tickets.filter(t => t.status === 'todo')} colorClass="border-slate-300" onDelete={(id) => { fetch(`http://127.0.0.1:5000/api/tickets/${id}`, {method:"DELETE"}); setTickets(t => t.filter(x=>x.id!==id)) }} onTicketClick={openEditModal} />
-            <Column id="doing" title="In Progress" tickets={tickets.filter(t => t.status === 'doing')} colorClass="border-blue-400" onDelete={(id) => { fetch(`http://127.0.0.1:5000/api/tickets/${id}`, {method:"DELETE"}); setTickets(t => t.filter(x=>x.id!==id)) }} onTicketClick={openEditModal} />
-            <Column id="done" title="Done" tickets={tickets.filter(t => t.status === 'done')} colorClass="border-emerald-400" onDelete={(id) => { fetch(`http://127.0.0.1:5000/api/tickets/${id}`, {method:"DELETE"}); setTickets(t => t.filter(x=>x.id!==id)) }} onTicketClick={openEditModal} />
+            <Column id="todo" title="To Do" tickets={tickets.filter(t => t.status === 'todo')} colorClass="border-slate-300" onDelete={(id) => { fetch(`${API}/api/tickets/${id}`, {method:"DELETE"}); setTickets(t => t.filter(x=>x.id!==id)) }} onTicketClick={openEditModal} />
+            <Column id="doing" title="In Progress" tickets={tickets.filter(t => t.status === 'doing')} colorClass="border-blue-400" onDelete={(id) => { fetch(`${API}/api/tickets/${id}`, {method:"DELETE"}); setTickets(t => t.filter(x=>x.id!==id)) }} onTicketClick={openEditModal} />
+            <Column id="done" title="Done" tickets={tickets.filter(t => t.status === 'done')} colorClass="border-emerald-400" onDelete={(id) => { fetch(`${API}/api/tickets/${id}`, {method:"DELETE"}); setTickets(t => t.filter(x=>x.id!==id)) }} onTicketClick={openEditModal} />
           </div>
           <DragOverlay>
             {activeId ? <div className="bg-white p-4 rounded border border-blue-400 w-[280px] shadow-2xl opacity-90"><h4 className="font-bold text-sm">{tickets.find(t=>t.id===activeId)?.title}</h4></div> : null}

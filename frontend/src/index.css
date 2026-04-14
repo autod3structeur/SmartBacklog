@@ -10,11 +10,3 @@
 body {
   @apply bg-gray-50 text-gray-900;
 }
-
-.kanban-column {
-  @apply flex-1 bg-gray-200/50 p-4 rounded-xl shadow-inner min-h-[500px];
-}
-
-.ticket-card {
-  @apply bg-white p-4 rounded-lg shadow-sm border border-gray-200 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow;
-}
